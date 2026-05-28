@@ -86,13 +86,14 @@ export default function LoadsheetPlugin() {
   const username = config.get<string>("simbriefUsername", "");
 
   // Live aircraft weights (lbs, canonical) — re-renders only when these change.
+  // `data` is undefined until the first sim snapshot hydrates, so default it.
   const live = useSimData({
     select: (s) => ({
-      fuelLb: s.data?.fuelTotalQuantityWeight ?? null,
-      zfwLb: s.data?.zeroWeightPlusPayload ?? null,
-      onGround: s.data?.planeOnground ?? null,
+      fuelLb: s?.data?.fuelTotalQuantityWeight ?? null,
+      zfwLb: s?.data?.zeroWeightPlusPayload ?? null,
+      onGround: s?.data?.planeOnground ?? null,
     }),
-  }).data;
+  }).data ?? { fuelLb: null, zfwLb: null, onGround: null };
 
   const [ofp, setOfp] = useState<SimBriefOfp | null>(null);
   const [ofpError, setOfpError] = useState<string | null>(null);

@@ -218,7 +218,9 @@ export default function LoadsheetPlugin() {
 
   // Fixed, tightly-grouped columns (packed left, not stretched across the
   // full width) so Label · Actual · Plan · Δ read as one compact block.
-  const COLS = "72px 150px 150px auto";
+  // All tracks are fixed — an `auto`/`fr` last track would expand and push
+  // the Δ badge to the far right.
+  const COLS = "72px 150px 150px 96px";
   const GRID_GAP = 20;
   const numBase: CSSProperties = {
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",

@@ -187,7 +187,7 @@ export default function LoadsheetPlugin() {
 
   if (!currentFlight) {
     return (
-      <Card>
+      <Card style={{ width: "100%", maxWidth: "none" }}>
         <CardHeader>
           <CardTitle>Loadsheet</CardTitle>
         </CardHeader>
@@ -224,7 +224,7 @@ export default function LoadsheetPlugin() {
   };
 
   return (
-    <Card>
+    <Card style={{ width: "100%", maxWidth: "none" }}>
       <CardHeader>
         <CardTitle>
           Loadsheet{ofp?.flightNumber ? ` — ${ofp.flightNumber}` : ""}

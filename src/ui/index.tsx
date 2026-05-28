@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 // Import from the bare specifier — the Stratos shell provides this module at
 // runtime (window.__stratos_modules__), so hooks share the shell's React
 // context + query client. Subpath imports would bundle a second SDK copy.
@@ -11,6 +11,7 @@ import {
   Card,
   CardAction,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
   Badge,
@@ -36,6 +37,12 @@ const SEVERITY_VARIANT: Record<Severity, "default" | "secondary" | "destructive"
   ok: "secondary",
   warn: "default",
   alert: "destructive",
+};
+
+const SEVERITY_DOT: Record<Severity, string> = {
+  ok: "#22c55e",
+  warn: "#f59e0b",
+  alert: "#ef4444",
 };
 
 const fmtKg = (v: number | null) =>
@@ -191,6 +198,30 @@ export default function LoadsheetPlugin() {
 
   const noSim = live.fuelLb == null && live.zfwLb == null;
   const hint = hintText(ls);
+  const subtitle =
+    ofp?.originIcao && ofp?.destinationIcao
+      ? `${ofp.originIcao} → ${ofp.destinationIcao}`
+      : null;
+  const worst: Severity = ls.cells.some((c) => c.severity === "alert")
+    ? "alert"
+    : ls.cells.some((c) => c.severity === "warn")
+      ? "warn"
+      : "ok";
+  const statusMsg = noSim
+    ? "Waiting for sim data…"
+    : !ofp
+      ? ofpError ??
+        (canLoadOfp
+          ? "Loading OFP…"
+          : "No SimBrief OFP linked. Set your SimBrief username in Stratos settings.")
+      : null;
+
+  const COLS = "52px 1fr 1fr 84px";
+  const numCell: CSSProperties = {
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+    fontVariantNumeric: "tabular-nums",
+    textAlign: "right",
+  };
 
   return (
     <Card>
@@ -198,6 +229,7 @@ export default function LoadsheetPlugin() {
         <CardTitle>
           Loadsheet{ofp?.flightNumber ? ` — ${ofp.flightNumber}` : ""}
         </CardTitle>
+        {subtitle && <CardDescription>{subtitle}</CardDescription>}
         <CardAction>
           <Button
             variant="outline"
@@ -210,33 +242,81 @@ export default function LoadsheetPlugin() {
         </CardAction>
       </CardHeader>
       <CardContent>
-        {noSim && <p style={{ marginBottom: 8 }}>Waiting for sim data…</p>}
-        {!ofp && !noSim && (
-          <p style={{ marginBottom: 8 }}>
-            {ofpError ??
-              (ofpId || username
-                ? "Loading OFP…"
-                : "No SimBrief OFP linked. Enter your SimBrief username in the plugin settings.")}
-          </p>
+        {statusMsg && (
+          <p style={{ marginBottom: 12, fontSize: 13, opacity: 0.7 }}>{statusMsg}</p>
         )}
 
-        <div style={{ display: "grid", gap: 8 }}>
+        <div style={{ display: "grid", gap: 6 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: COLS,
+              alignItems: "center",
+              gap: 12,
+              fontSize: 11,
+              letterSpacing: 0.6,
+              textTransform: "uppercase",
+              opacity: 0.5,
+              paddingBottom: 4,
+              borderBottom: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            <span />
+            <span style={{ textAlign: "right" }}>Actual</span>
+            <span style={{ textAlign: "right" }}>Plan</span>
+            <span style={{ textAlign: "right" }}>Δ</span>
+          </div>
+
           {ls.cells.map((c) => (
-            <div key={c.label} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ width: 56, fontWeight: 600 }}>{CELL_LABEL[c.label]}</span>
-              <span style={{ fontFamily: "monospace", minWidth: 110 }}>{fmtKg(c.istKg)}</span>
-              <span style={{ opacity: 0.6, fontFamily: "monospace" }}>Plan {fmtKg(c.sollKg)}</span>
-              {c.deltaKg != null && (
-                <Badge variant={SEVERITY_VARIANT[c.severity]}>
-                  {c.overweight ? "⚠ " : ""}
-                  {fmtDelta(c.deltaKg)} kg
-                </Badge>
-              )}
+            <div
+              key={c.label}
+              style={{
+                display: "grid",
+                gridTemplateColumns: COLS,
+                alignItems: "center",
+                gap: 12,
+                paddingTop: 2,
+              }}
+            >
+              <span style={{ fontWeight: 600 }}>{CELL_LABEL[c.label]}</span>
+              <span style={numCell}>{fmtKg(c.istKg)}</span>
+              <span style={{ ...numCell, opacity: 0.5 }}>{fmtKg(c.sollKg)}</span>
+              <span style={{ textAlign: "right" }}>
+                {c.deltaKg != null ? (
+                  <Badge variant={SEVERITY_VARIANT[c.severity]}>
+                    {c.overweight ? "⚠ " : ""}
+                    {fmtDelta(c.deltaKg)}
+                  </Badge>
+                ) : (
+                  <span style={{ opacity: 0.35 }}>—</span>
+                )}
+              </span>
             </div>
           ))}
         </div>
 
-        {hint && <p style={{ marginTop: 12 }}>{hint}</p>}
+        {hint && (
+          <div
+            style={{
+              marginTop: 16,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 14,
+            }}
+          >
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 999,
+                flexShrink: 0,
+                background: SEVERITY_DOT[worst],
+              }}
+            />
+            <span>{hint}</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

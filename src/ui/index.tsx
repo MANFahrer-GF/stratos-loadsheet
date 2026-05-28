@@ -9,10 +9,12 @@ import {
   useFlightEvents,
   STRATOS_APP_BASE,
   Card,
+  CardAction,
   CardContent,
   CardHeader,
   CardTitle,
   Badge,
+  Button,
 } from "@skyvexsoftware/stratos-sdk";
 import {
   buildLoadsheet,
@@ -97,34 +99,47 @@ export default function LoadsheetPlugin() {
 
   const [ofp, setOfp] = useState<SimBriefOfp | null>(null);
   const [ofpError, setOfpError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  // Bumped by the Refresh button to force a re-fetch of the OFP.
+  const [refreshNonce, setRefreshNonce] = useState(0);
 
   const plan = currentFlight?.flightPlan;
   const ofpId = plan?.source === "simbrief" ? plan.sourceId : undefined;
   const flightId =
     currentFlight?.stratosFlightId ?? currentFlight?.vaTrackingId ?? null;
+  const canLoadOfp = Boolean(ofpId || username);
 
-  // Resolve the OFP (background route → direct fallback) when the flight or
-  // SimBrief username changes.
+  // Resolve the OFP (background route → direct fallback) on flight/username
+  // change and on manual refresh. A manual refresh (nonce > 0) prefers the
+  // latest OFP via username when available, so re-planning in SimBrief is
+  // picked up without restarting the flight.
   useEffect(() => {
     let cancelled = false;
+    if (!canLoadOfp) {
+      setOfp(null);
+      return;
+    }
+    setRefreshing(true);
     setOfpError(null);
-    setOfp(null);
-    if (!ofpId && !username) return;
+    const query =
+      refreshNonce > 0 && username ? { username } : { ofpId, username };
     void (async () => {
       try {
-        const result = await loadOfp(STRATOS_APP_BASE, { ofpId, username });
+        const result = await loadOfp(STRATOS_APP_BASE, query);
         if (!cancelled) {
           setOfp(result);
           if (!result) setOfpError("No OFP found.");
         }
       } catch {
         if (!cancelled) setOfpError("Could not load SimBrief OFP.");
+      } finally {
+        if (!cancelled) setRefreshing(false);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [ofpId, username]);
+  }, [ofpId, username, refreshNonce, canLoadOfp]);
 
   // Live IST in kg.
   const blockFuelKg = live.fuelLb != null && live.fuelLb > 0 ? lbsToKg(live.fuelLb) : null;
@@ -164,6 +179,16 @@ export default function LoadsheetPlugin() {
         <CardTitle>
           Loadsheet{ofp?.flightNumber ? ` — ${ofp.flightNumber}` : ""}
         </CardTitle>
+        <CardAction>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setRefreshNonce((n) => n + 1)}
+            disabled={refreshing || !canLoadOfp}
+          >
+            {refreshing ? "Refreshing…" : "Refresh"}
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent>
         {noSim && <p style={{ marginBottom: 8 }}>Waiting for sim data…</p>}

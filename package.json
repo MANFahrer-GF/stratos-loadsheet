@@ -9,9 +9,11 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "icons": "node scripts/generate-icons.mjs",
+    "dev": "vite",
     "build:ui": "vite build",
     "build:bg": "cross-env BUILD_TARGET=background vite build",
-    "build": "npm run icons && npm run build:ui && npm run build:bg"
+    "build": "npm run icons && npm run build:ui && npm run build:bg",
+    "bundle": "npm run build && stratos-deploy"
   },
   "dependencies": {
     "express": "^4.21.0"

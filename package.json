@@ -1,6 +1,6 @@
 {
   "name": "stratos-loadsheet",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "OFP loadsheet check (Block/ZFW/TOW vs SimBrief plan) for the SkyVex Stratos ACARS client.",

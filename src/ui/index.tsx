@@ -85,7 +85,15 @@ export default function LoadsheetPlugin() {
   const { currentFlight, phase } = useTrackingSession();
   const config = useShellConfig();
   const { addComment } = useFlightEvents();
-  const username = config.get<string>("simbriefUsername", "");
+  // Prefer the shell's GLOBAL SimBrief username (Settings → "SimBrief
+  // Username", shared across plugins). The exact key isn't documented, so try
+  // the likely variants; fall back to this plugin's own declared setting.
+  const username =
+    config.get<string>("simbriefUsername", "") ||
+    config.get<string>("simbrief.username", "") ||
+    config.get<string>("simBriefUsername", "") ||
+    config.get<string>("simbrief_username", "") ||
+    config.get<string>("simbrief", "");
 
   // Live aircraft weights (lbs, canonical) — re-renders only when these change.
   // `data` is undefined until the first sim snapshot hydrates, so default it.

@@ -216,12 +216,17 @@ export default function LoadsheetPlugin() {
           : "No SimBrief OFP linked. Set your SimBrief username in Stratos settings.")
       : null;
 
-  const COLS = "52px 1fr 1fr 84px";
-  const numCell: CSSProperties = {
+  // Fixed, tightly-grouped columns (packed left, not stretched across the
+  // full width) so Label · Actual · Plan · Δ read as one compact block.
+  const COLS = "72px 150px 150px auto";
+  const GRID_GAP = 20;
+  const numBase: CSSProperties = {
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
     fontVariantNumeric: "tabular-nums",
     textAlign: "right",
   };
+  const actualCell: CSSProperties = { ...numBase, fontSize: 20, fontWeight: 600 };
+  const planCell: CSSProperties = { ...numBase, fontSize: 14, opacity: 0.5 };
 
   return (
     <Card style={{ width: "100%", maxWidth: "none" }}>
@@ -252,12 +257,12 @@ export default function LoadsheetPlugin() {
               display: "grid",
               gridTemplateColumns: COLS,
               alignItems: "center",
-              gap: 12,
+              gap: GRID_GAP,
               fontSize: 11,
               letterSpacing: 0.6,
               textTransform: "uppercase",
               opacity: 0.5,
-              paddingBottom: 4,
+              paddingBottom: 6,
               borderBottom: "1px solid rgba(255,255,255,0.08)",
             }}
           >
@@ -274,16 +279,19 @@ export default function LoadsheetPlugin() {
                 display: "grid",
                 gridTemplateColumns: COLS,
                 alignItems: "center",
-                gap: 12,
-                paddingTop: 2,
+                gap: GRID_GAP,
+                paddingTop: 6,
               }}
             >
-              <span style={{ fontWeight: 600 }}>{CELL_LABEL[c.label]}</span>
-              <span style={numCell}>{fmtKg(c.istKg)}</span>
-              <span style={{ ...numCell, opacity: 0.5 }}>{fmtKg(c.sollKg)}</span>
+              <span style={{ fontWeight: 600, fontSize: 15 }}>{CELL_LABEL[c.label]}</span>
+              <span style={actualCell}>{fmtKg(c.istKg)}</span>
+              <span style={planCell}>{fmtKg(c.sollKg)}</span>
               <span style={{ textAlign: "right" }}>
                 {c.deltaKg != null ? (
-                  <Badge variant={SEVERITY_VARIANT[c.severity]}>
+                  <Badge
+                    variant={SEVERITY_VARIANT[c.severity]}
+                    style={{ fontSize: 14, padding: "4px 11px" }}
+                  >
                     {c.overweight ? "⚠ " : ""}
                     {fmtDelta(c.deltaKg)}
                   </Badge>

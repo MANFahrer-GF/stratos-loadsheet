@@ -21,6 +21,7 @@
   "devDependencies": {
     "@skyvexsoftware/stratos-sdk": "^0.10.1",
     "@types/express": "^4.17.21",
+    "@vitejs/plugin-react": "^5.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "cross-env": "^7.0.3",

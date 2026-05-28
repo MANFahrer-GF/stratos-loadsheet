@@ -6,6 +6,6 @@ import { createPluginConfig } from "@skyvexsoftware/stratos-sdk/vite";
 // externalised (not bundled) by createPluginConfig.
 export default createPluginConfig({
   pluginDir: import.meta.dirname,
-  ui: { entry: "ui/index.tsx" },
-  background: { entry: "background/index.ts" },
+  ui: { entry: "src/ui/index.tsx" },
+  background: { entry: "src/background/index.ts" },
 });

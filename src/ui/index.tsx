@@ -20,9 +20,9 @@ import {
   type Loadsheet,
   type LoadsheetCell,
   type Severity,
-} from "../src/loadsheet";
-import { loadOfp } from "../src/ofpLoader";
-import type { SimBriefOfp } from "../src/simbriefOfp";
+} from "../loadsheet";
+import { loadOfp } from "../ofpLoader";
+import type { SimBriefOfp } from "../simbriefOfp";
 
 const CELL_LABEL: Record<LoadsheetCell["label"], string> = {
   block: "Block",

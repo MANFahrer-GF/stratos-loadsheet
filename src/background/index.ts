@@ -3,7 +3,7 @@ import express from "express";
 import {
   fetchSimbriefOfpById,
   fetchSimbriefOfpByUsername,
-} from "../src/simbriefOfp";
+} from "../simbriefOfp";
 
 // The OFP fetch runs HERE (Electron main / Node) — not in the renderer — so
 // it is immune to browser CORS. The UI calls GET /loadsheet/ofp on the local

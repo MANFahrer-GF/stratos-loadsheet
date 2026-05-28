@@ -2,7 +2,7 @@
   "id": "stratos-loadsheet",
   "type": "user",
   "name": "Loadsheet",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "OFP loadsheet check — compares actual Block fuel / ZFW / TOW at block-off against your SimBrief plan, with overweight warnings.",
   "author": {
     "id": "stratos-loadsheet",
@@ -10,14 +10,5 @@
   },
   "icon_light": "icon-light.png",
   "icon_dark": "icon-dark.png",
-  "availableSettings": [
-    {
-      "key": "simbriefUsername",
-      "name": "SimBrief Username",
-      "description": "Used to fetch your latest OFP when the flight was not started from a SimBrief plan. Leave empty if you always dispatch via SimBrief.",
-      "scope": "user",
-      "type": "text",
-      "placeholder": "your SimBrief username"
-    }
-  ]
+  "availableSettings": []
 }

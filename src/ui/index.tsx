@@ -5,7 +5,6 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   useTrackingSession,
   useSimData,
-  useShellConfig,
   useFlightEvents,
   STRATOS_APP_BASE,
   Card,
@@ -90,28 +89,24 @@ const BLOCK_OFF_PHASES = new Set(["taxi", "take_off", "climb", "cruise"]);
 /** Root component for the Loadsheet plugin. */
 export default function LoadsheetPlugin() {
   const { currentFlight, phase } = useTrackingSession();
-  const config = useShellConfig();
   const { addComment } = useFlightEvents();
-  // The plugin's own declared setting (fallback).
-  const pluginUsername = config.get<string>("simbriefUsername", "");
-  // The shell's GLOBAL SimBrief username (Settings → "SimBrief Username",
-  // shared across plugins), read from the local app config endpoint. This is
-  // the value most users set, so prefer it; fall back to the plugin setting.
-  const [shellUsername, setShellUsername] = useState("");
+  // SimBrief username comes from the user's GLOBAL Stratos setting via the
+  // local app config endpoint — no separate plugin setting, so it is never
+  // entered twice.
+  const [username, setUsername] = useState("");
   useEffect(() => {
     let cancelled = false;
     fetch(`${STRATOS_APP_BASE}/api/config`)
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => {
         const u = j?.data?.simbriefUsername;
-        if (!cancelled && typeof u === "string") setShellUsername(u);
+        if (!cancelled && typeof u === "string") setUsername(u);
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, []);
-  const username = shellUsername || pluginUsername;
 
   // Live aircraft weights (lbs, canonical) — re-renders only when these change.
   // `data` is undefined until the first sim snapshot hydrates, so default it.

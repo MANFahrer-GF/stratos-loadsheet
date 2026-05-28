@@ -44,22 +44,38 @@ const SEVERITY_DOT: Record<Severity, string> = {
   alert: "#ef4444",
 };
 
-const fmtKg = (v: number | null) =>
-  v == null ? "—" : `${Math.round(v).toLocaleString("en-US")} kg`;
+// Display weight unit — the user's preference from Stratos settings
+// (config.weightUnit). All internal math stays in kg; we only convert for
+// display so deltas/thresholds remain consistent regardless of unit.
+type WeightUnit = "kg" | "lbs";
+const KG_PER_LB = 0.453_592_37;
+const toUnit = (kg: number, unit: WeightUnit) =>
+  unit === "lbs" ? kg / KG_PER_LB : kg;
 
-const fmtDelta = (v: number) =>
-  `${v >= 0 ? "+" : ""}${Math.round(v).toLocaleString("en-US")}`;
+const fmtWeight = (kg: number | null, unit: WeightUnit) =>
+  kg == null
+    ? "—"
+    : `${Math.round(toUnit(kg, unit)).toLocaleString("en-US")} ${unit}`;
 
-function hintText(ls: Loadsheet): string | null {
+const fmtDelta = (kg: number, unit: WeightUnit) => {
+  const r = Math.round(toUnit(kg, unit));
+  return `${r >= 0 ? "+" : ""}${r.toLocaleString("en-US")}`;
+};
+
+const fmtAmount = (kg: number, unit: WeightUnit) =>
+  `${Math.round(toUnit(kg, unit)).toLocaleString("en-US")} ${unit}`;
+
+function hintText(ls: Loadsheet, unit: WeightUnit): string | null {
+  const amt = ls.hint.amountKg != null ? fmtAmount(ls.hint.amountKg, unit) : "";
   switch (ls.hint.kind) {
     case "ready":
       return "Loadsheet matches — ready to go.";
     case "fueling":
-      return `Add ${ls.hint.amountKg?.toLocaleString("en-US")} kg more fuel.`;
+      return `Add ${amt} more fuel.`;
     case "boarding":
-      return `${ls.hint.amountKg?.toLocaleString("en-US")} kg of payload still to load.`;
+      return `${amt} of payload still to load.`;
     case "overfueled":
-      return `${ls.hint.amountKg?.toLocaleString("en-US")} kg more fuel than planned.`;
+      return `${amt} more fuel than planned.`;
     default:
       return ls.ofpLooksOutdated
         ? "OFP looks outdated — re-plan and restart if needed."
@@ -68,13 +84,13 @@ function hintText(ls: Loadsheet): string | null {
 }
 
 /** Build the one-line summary written into the PIREP at block-off. */
-function pirepSummary(ls: Loadsheet): string {
+function pirepSummary(ls: Loadsheet, unit: WeightUnit): string {
   const part = (c: LoadsheetCell) => {
-    const v = fmtKg(c.istKg);
     if (c.istKg == null) return null;
+    const v = fmtWeight(c.istKg, unit);
     const plan =
       c.sollKg != null && c.deltaKg != null
-        ? ` (Plan ${fmtKg(c.sollKg)}, Δ ${fmtDelta(c.deltaKg)})`
+        ? ` (Plan ${fmtWeight(c.sollKg, unit)}, Δ ${fmtDelta(c.deltaKg, unit)})`
         : "";
     const ow = c.overweight ? " ⚠OVERWEIGHT" : "";
     return `${CELL_LABEL[c.label]} ${v}${plan}${ow}`;
@@ -90,17 +106,19 @@ const BLOCK_OFF_PHASES = new Set(["taxi", "take_off", "climb", "cruise"]);
 export default function LoadsheetPlugin() {
   const { currentFlight, phase } = useTrackingSession();
   const { addComment } = useFlightEvents();
-  // SimBrief username comes from the user's GLOBAL Stratos setting via the
-  // local app config endpoint — no separate plugin setting, so it is never
-  // entered twice.
+  // SimBrief username AND weight-unit preference both come from the user's
+  // GLOBAL Stratos settings via the local app config endpoint — no separate
+  // plugin settings, nothing entered twice.
   const [username, setUsername] = useState("");
+  const [unit, setUnit] = useState<WeightUnit>("kg");
   useEffect(() => {
     let cancelled = false;
     fetch(`${STRATOS_APP_BASE}/api/config`)
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => {
-        const u = j?.data?.simbriefUsername;
-        if (!cancelled && typeof u === "string") setUsername(u);
+        if (cancelled || !j?.data) return;
+        if (typeof j.data.simbriefUsername === "string") setUsername(j.data.simbriefUsername);
+        if (j.data.weightUnit === "lbs" || j.data.weightUnit === "kg") setUnit(j.data.weightUnit);
       })
       .catch(() => {});
     return () => {
@@ -176,9 +194,9 @@ export default function LoadsheetPlugin() {
     if (!flightId || sentForFlight.current === flightId) return;
     if (!BLOCK_OFF_PHASES.has(phase)) return;
     if (blockFuelKg == null && zfwKg == null) return; // no data yet
-    addComment(pirepSummary(ls));
+    addComment(pirepSummary(ls, unit));
     sentForFlight.current = flightId;
-  }, [phase, flightId, blockFuelKg, zfwKg, ls, addComment]);
+  }, [phase, flightId, blockFuelKg, zfwKg, ls, unit, addComment]);
 
   if (!currentFlight) {
     return (
@@ -192,7 +210,7 @@ export default function LoadsheetPlugin() {
   }
 
   const noSim = live.fuelLb == null && live.zfwLb == null;
-  const hint = hintText(ls);
+  const hint = hintText(ls, unit);
   const subtitle =
     ofp?.originIcao && ofp?.destinationIcao
       ? `${ofp.originIcao} → ${ofp.destinationIcao}`
@@ -281,8 +299,8 @@ export default function LoadsheetPlugin() {
               }}
             >
               <span style={{ fontWeight: 600, fontSize: 15 }}>{CELL_LABEL[c.label]}</span>
-              <span style={actualCell}>{fmtKg(c.istKg)}</span>
-              <span style={planCell}>{fmtKg(c.sollKg)}</span>
+              <span style={actualCell}>{fmtWeight(c.istKg, unit)}</span>
+              <span style={planCell}>{fmtWeight(c.sollKg, unit)}</span>
               <span style={{ textAlign: "right" }}>
                 {c.deltaKg != null ? (
                   <Badge
@@ -290,7 +308,7 @@ export default function LoadsheetPlugin() {
                     style={{ fontSize: 14, padding: "4px 11px" }}
                   >
                     {c.overweight ? "⚠ " : ""}
-                    {fmtDelta(c.deltaKg)}
+                    {fmtDelta(c.deltaKg, unit)}
                   </Badge>
                 ) : (
                   <span style={{ opacity: 0.35 }}>—</span>

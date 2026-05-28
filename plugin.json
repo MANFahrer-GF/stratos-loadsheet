@@ -2,13 +2,14 @@
   "id": "stratos-loadsheet",
   "type": "user",
   "name": "Loadsheet",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "OFP loadsheet check — compares actual Block fuel / ZFW / TOW at block-off against your SimBrief plan, with overweight warnings.",
   "author": {
-    "id": "stratos-loadsheet",
-    "name": "Loadsheet"
+    "id": "thomas-kant",
+    "name": "Thomas Kant"
   },
   "icon_light": "icon-light.png",
   "icon_dark": "icon-dark.png",
+  "homepage": "https://github.com/MANFahrer-GF/stratos-loadsheet",
   "availableSettings": []
 }

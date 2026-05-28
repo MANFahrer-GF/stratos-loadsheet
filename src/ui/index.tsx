@@ -37,24 +37,24 @@ const SEVERITY_VARIANT: Record<Severity, "default" | "secondary" | "destructive"
 };
 
 const fmtKg = (v: number | null) =>
-  v == null ? "—" : `${Math.round(v).toLocaleString("de-DE")} kg`;
+  v == null ? "—" : `${Math.round(v).toLocaleString("en-US")} kg`;
 
 const fmtDelta = (v: number) =>
-  `${v >= 0 ? "+" : ""}${Math.round(v).toLocaleString("de-DE")}`;
+  `${v >= 0 ? "+" : ""}${Math.round(v).toLocaleString("en-US")}`;
 
 function hintText(ls: Loadsheet): string | null {
   switch (ls.hint.kind) {
     case "ready":
-      return "Loadsheet passt — startklar.";
+      return "Loadsheet matches — ready to go.";
     case "fueling":
-      return `Noch ${ls.hint.amountKg?.toLocaleString("de-DE")} kg nachtanken.`;
+      return `Add ${ls.hint.amountKg?.toLocaleString("en-US")} kg more fuel.`;
     case "boarding":
-      return `Noch ${ls.hint.amountKg?.toLocaleString("de-DE")} kg Zuladung fehlt.`;
+      return `${ls.hint.amountKg?.toLocaleString("en-US")} kg of payload still to load.`;
     case "overfueled":
-      return `${ls.hint.amountKg?.toLocaleString("de-DE")} kg mehr getankt als geplant.`;
+      return `${ls.hint.amountKg?.toLocaleString("en-US")} kg more fuel than planned.`;
     default:
       return ls.ofpLooksOutdated
-        ? "OFP wirkt veraltet — neu planen und ggf. erneut starten."
+        ? "OFP looks outdated — re-plan and restart if needed."
         : null;
   }
 }
@@ -115,10 +115,10 @@ export default function LoadsheetPlugin() {
         const result = await loadOfp(STRATOS_APP_BASE, { ofpId, username });
         if (!cancelled) {
           setOfp(result);
-          if (!result) setOfpError("Kein OFP gefunden.");
+          if (!result) setOfpError("No OFP found.");
         }
       } catch {
-        if (!cancelled) setOfpError("SimBrief-OFP konnte nicht geladen werden.");
+        if (!cancelled) setOfpError("Could not load SimBrief OFP.");
       }
     })();
     return () => {
@@ -150,7 +150,7 @@ export default function LoadsheetPlugin() {
         <CardHeader>
           <CardTitle>Stratos Loadsheet</CardTitle>
         </CardHeader>
-        <CardContent>Kein aktiver Flug. Starte einen Flug, um das Loadsheet zu sehen.</CardContent>
+        <CardContent>No active flight. Start a flight to see the loadsheet.</CardContent>
       </Card>
     );
   }
@@ -166,13 +166,13 @@ export default function LoadsheetPlugin() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {noSim && <p style={{ marginBottom: 8 }}>Warte auf Sim-Daten…</p>}
+        {noSim && <p style={{ marginBottom: 8 }}>Waiting for sim data…</p>}
         {!ofp && !noSim && (
           <p style={{ marginBottom: 8 }}>
             {ofpError ??
               (ofpId || username
-                ? "OFP wird geladen…"
-                : "Kein SimBrief-OFP verknüpft. Trage deinen SimBrief-Usernamen in den Plugin-Einstellungen ein.")}
+                ? "Loading OFP…"
+                : "No SimBrief OFP linked. Enter your SimBrief username in the plugin settings.")}
           </p>
         )}
 

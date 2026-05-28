@@ -52,47 +52,43 @@ function png(rgba) {
   ]);
 }
 
-function render({ bg, fg }) {
-  const buf = Buffer.alloc(SIZE * SIZE * 4);
-  const radius = 24;
-  const inCorner = (x, y) => {
-    const cx = x < radius ? radius : x >= SIZE - radius ? SIZE - radius - 1 : x;
-    const cy = y < radius ? radius : y >= SIZE - radius ? SIZE - radius - 1 : y;
-    return (x - cx) ** 2 + (y - cy) ** 2 <= radius ** 2;
-  };
-  // three "loadsheet" bars
-  const bars = [
-    { y0: 40, y1: 54 },
-    { y0: 62, y1: 76 },
-    { y0: 84, y1: 98 },
+// Monochrome "sheet with lines" glyph on a TRANSPARENT background — matches the
+// outline style of the other sidebar icons and looks clean in the selected
+// state (no filled square block).
+function render({ fg }) {
+  const buf = Buffer.alloc(SIZE * SIZE * 4); // zero-filled = fully transparent
+  // Document outline
+  const OX = 40, OY = 22, W = 48, H = 84, t = 6;
+  const inRect = (x, y) => x >= OX && x < OX + W && y >= OY && y < OY + H;
+  const onBorder = (x, y) =>
+    inRect(x, y) && (x < OX + t || x >= OX + W - t || y < OY + t || y >= OY + H - t);
+  // Three content lines inside the sheet
+  const lineX0 = OX + 13, lineX1 = OX + W - 13;
+  const lines = [
+    { y0: 42, y1: 48 },
+    { y0: 60, y1: 66 },
+    { y0: 78, y1: 84 },
   ];
+  const onLine = (x, y) =>
+    x >= lineX0 && x <= lineX1 && lines.some((l) => y >= l.y0 && y <= l.y1);
+
   for (let y = 0; y < SIZE; y++) {
     for (let x = 0; x < SIZE; x++) {
-      const i = (y * SIZE + x) * 4;
-      if (!inCorner(x, y)) {
-        buf[i + 3] = 0; // transparent outside rounded square
-        continue;
+      if (onBorder(x, y) || onLine(x, y)) {
+        const i = (y * SIZE + x) * 4;
+        buf[i] = fg[0];
+        buf[i + 1] = fg[1];
+        buf[i + 2] = fg[2];
+        buf[i + 3] = 255;
       }
-      const onBar = bars.some((b) => y >= b.y0 && y <= b.y1 && x >= 28 && x <= 100);
-      const c = onBar ? fg : bg;
-      buf[i] = c[0];
-      buf[i + 1] = c[1];
-      buf[i + 2] = c[2];
-      buf[i + 3] = 255;
     }
   }
   return buf;
 }
 
 mkdirSync(assetsDir, { recursive: true });
-// icon_light = used on LIGHT theme → dark navy glyph
-writeFileSync(
-  resolve(assetsDir, "icon-light.png"),
-  png(render({ bg: [30, 41, 59], fg: [226, 232, 240] })),
-);
-// icon_dark = used on DARK theme → light slate glyph
-writeFileSync(
-  resolve(assetsDir, "icon-dark.png"),
-  png(render({ bg: [226, 232, 240], fg: [30, 41, 59] })),
-);
+// icon_light = used on LIGHT theme → dark glyph on transparent
+writeFileSync(resolve(assetsDir, "icon-light.png"), png(render({ fg: [51, 65, 85] })));
+// icon_dark = used on DARK theme → light glyph on transparent
+writeFileSync(resolve(assetsDir, "icon-dark.png"), png(render({ fg: [226, 232, 240] })));
 console.log("wrote icon-light.png + icon-dark.png to", assetsDir);

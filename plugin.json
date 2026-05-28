@@ -1,12 +1,12 @@
 {
   "id": "stratos-loadsheet",
   "type": "user",
-  "name": "Stratos Loadsheet",
+  "name": "Loadsheet",
   "version": "0.1.0",
   "description": "OFP loadsheet check — compares actual Block fuel / ZFW / TOW at block-off against your SimBrief plan, with overweight warnings.",
   "author": {
     "id": "stratos-loadsheet",
-    "name": "Stratos Loadsheet"
+    "name": "Loadsheet"
   },
   "icon_light": "icon-light.png",
   "icon_dark": "icon-dark.png",

@@ -30,9 +30,9 @@ export default createPlugin({
     });
 
     ctx.server.registerRouter("/loadsheet", router);
-    ctx.logger.info("Loadsheet", "Stratos Loadsheet plugin started");
+    ctx.logger.info("Loadsheet", "Loadsheet plugin started");
   },
   async onStop(ctx) {
-    ctx.logger.info("Loadsheet", "Stratos Loadsheet plugin stopped");
+    ctx.logger.info("Loadsheet", "Loadsheet plugin stopped");
   },
 });

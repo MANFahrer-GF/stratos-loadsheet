@@ -78,7 +78,7 @@ function pirepSummary(ls: Loadsheet): string {
 // Phases that mean "we have left the gate" → freeze + write the loadsheet.
 const BLOCK_OFF_PHASES = new Set(["taxi", "take_off", "climb", "cruise"]);
 
-/** Root component for the Stratos Loadsheet plugin. */
+/** Root component for the Loadsheet plugin. */
 export default function LoadsheetPlugin() {
   const { currentFlight, phase } = useTrackingSession();
   const config = useShellConfig();
@@ -148,7 +148,7 @@ export default function LoadsheetPlugin() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Stratos Loadsheet</CardTitle>
+          <CardTitle>Loadsheet</CardTitle>
         </CardHeader>
         <CardContent>No active flight. Start a flight to see the loadsheet.</CardContent>
       </Card>
@@ -162,7 +162,7 @@ export default function LoadsheetPlugin() {
     <Card>
       <CardHeader>
         <CardTitle>
-          Stratos Loadsheet{ofp?.flightNumber ? ` — ${ofp.flightNumber}` : ""}
+          Loadsheet{ofp?.flightNumber ? ` — ${ofp.flightNumber}` : ""}
         </CardTitle>
       </CardHeader>
       <CardContent>
